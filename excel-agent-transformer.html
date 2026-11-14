@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تبدیل‌کننده اکسل عامل‌ها</title>
+    <!-- Offline: local copies of libraries (place these files next to this HTML) -->
+    <script src="xlsx.full.min.js"></script>
+    <script src="Sortable.min.js"></script>
+    <style>
+      :root {
+        --bg: #0f1419;
+        --card: #1a2332;
+        --border: #2d3a4f;
+        --text: #e7ecf3;
+        --muted: #8b9bb4;
+        --accent: #3b82f6;
+        --accent-hover: #2563eb;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --input-bg: #0d1117;
+        --radius: 10px;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "B Homa", Tahoma, "Vazirmatn", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin-bottom: 24px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 18px;
+      }
+      .card h2 {
+        font-size: 1.1rem;
+        margin-bottom: 14px;
+        color: #93c5fd;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card h2 .badge {
+        font-size: 0.75rem;
+        background: #1e3a5f;
+        color: #93c5fd;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+      label {
+        display: block;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        color: var(--muted);
+      }
+      input[type="text"],
+      input[type="file"],
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+      }
+      input[type="file"] {
+        padding: 8px;
+        cursor: pointer;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+      .btn-success {
+        background: var(--success);
+        color: white;
+      }
+      .btn-success:hover {
+        background: #059669;
+      }
+      .btn-danger {
+        background: transparent;
+        color: var(--danger);
+        border: 1px solid var(--danger);
+      }
+      .btn-danger:hover {
+        background: rgba(239, 68, 68, 0.15);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      .row > * {
+        flex: 1;
+        min-width: 180px;
+      }
+      .list-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        cursor: grab;
+      }
+      .list-item:active {
+        cursor: grabbing;
+      }
+      .list-item .handle {
+        color: var(--muted);
+        font-size: 1.1rem;
+        user-select: none;
+      }
+      .list-item input {
+        flex: 1;
+      }
+      .list-item .remove {
+        background: none;
+        border: none;
+        color: var(--danger);
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 4px;
+      }
+      .mapping-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        background: var(--input-bg);
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .mapping-row .arrow {
+        color: var(--muted);
+        font-size: 1.2rem;
+      }
+      .auto-field {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: end;
+        margin-bottom: 10px;
+        background: var(--input-bg);
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .preview-table-wrap {
+        overflow-x: auto;
+        max-height: 320px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      th,
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        text-align: right;
+        white-space: nowrap;
+      }
+      th {
+        background: #15202b;
+        position: sticky;
+        top: 0;
+        color: #93c5fd;
+      }
+      tr:hover td {
+        background: rgba(59, 130, 246, 0.08);
+      }
+      .status {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .status.show {
+        display: block;
+      }
+      .status.info {
+        background: #1e3a5f;
+        color: #93c5fd;
+      }
+      .status.success {
+        background: #064e3b;
+        color: #6ee7b7;
+      }
+      .status.error {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      .hint {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .empty-msg {
+        color: var(--muted);
+        font-style: italic;
+        padding: 12px;
+        text-align: center;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0;
+      }
+      .tab {
+        padding: 10px 18px;
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.95rem;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+      }
+      .tab.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+        font-weight: 600;
+      }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+      .id-col-select {
+        max-width: 320px;
+      }
+      .save-indicator {
+        font-size: 0.8rem;
+        color: var(--success);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .save-indicator.show {
+        opacity: 1;
+      }
+
+      /* Agent checkbox list */
+      .agent-check-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .agent-check-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+        user-select: none;
+      }
+      .agent-check-item:hover {
+        border-color: var(--accent);
+        background: rgba(59, 130, 246, 0.08);
+      }
+      .agent-check-item.selected {
+        border-color: var(--accent);
+        background: rgba(59, 130, 246, 0.15);
+      }
+      .agent-check-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .agent-check-item span {
+        flex: 1;
+        font-size: 0.9rem;
+        word-break: break-word;
+      }
+      .selected-agents-title {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin-bottom: 8px;
+        margin-top: 8px;
+      }
+
+      @media (max-width: 700px) {
+        .mapping-row {
+          grid-template-columns: 1fr;
+        }
+        .auto-field {
+          grid-template-columns: 1fr;
+        }
+        .mapping-row .arrow {
+          display: none;
+        }
+        .agent-check-list {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📊 تبدیل‌کننده اکسل عامل‌ها</h1>
+      <p class="subtitle">
+        آپلود فایل ورودی → انتخاب ستون‌های عامل → نگاشت ستون‌ها → خروجی چندردیفی
+        با ذخیره تنظیمات
+      </p>
+
+      <div id="status" class="status"></div>
+
+      <!-- Step 1: Upload -->
+      <div class="card">
+        <h2>۱. فایل اکسل ورودی <span class="badge">الزامی</span></h2>
+        <label>انتخاب فایل (.xlsx / .xls / .csv)</label>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+        <p class="hint">
+          فایل باید شامل کد هویتی کاربران و ستون‌های مربوط به مقادیر هر عنوان
+          عامل باشد.
+        </p>
+        <div id="fileInfo" style="margin-top: 12px; display: none">
+          <strong id="fileName"></strong>
+          <span
+            id="rowCount"
+            style="color: var(--muted); margin-right: 12px"
+          ></span>
+        </div>
+      </div>
+
+      <!-- Tabs for config -->
+      <div class="tabs">
+        <button class="tab active" data-tab="agents">عناوین عامل‌ها</button>
+        <button class="tab" data-tab="mapping">نگاشت ستون‌ها</button>
+        <button class="tab" data-tab="auto">فیلدهای ثابت</button>
+        <button class="tab" data-tab="order">ترتیب خروجی</button>
+      </div>
+
+      <!-- Tab: Agent Titles (select from Excel columns) -->
+      <div class="tab-panel active" id="panel-agents">
+        <div class="card">
+          <h2>
+            ۲. عناوین عامل‌ها <span class="badge">انتخاب از ستون‌ها</span>
+          </h2>
+          <p class="hint" style="margin-bottom: 12px">
+            ستون‌هایی که می‌خواهید به‌عنوان عامل استفاده شوند را تیک بزنید. برای
+            هر کاربر، به تعداد عامل‌های انتخاب‌شده سطر ساخته می‌شود و مقدار هر
+            عامل از همان ستون خوانده می‌شود.
+          </p>
+
+          <div id="agentCheckList" class="agent-check-list"></div>
+          <p class="empty-msg" id="agentEmpty">
+            ابتدا فایل اکسل را آپلود کنید تا ستون‌ها اینجا نمایش داده شوند.
+          </p>
+
+          <div id="selectedAgentsSection" style="display: none">
+            <p class="selected-agents-title">
+              عامل‌های انتخاب‌شده (می‌توانید ترتیب را با کشیدن عوض کنید):
+            </p>
+            <div id="agentList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Column Mapping -->
+      <div class="tab-panel" id="panel-mapping">
+        <div class="card">
+          <h2>۳. نگاشت ستون‌ها <span class="badge">ورودی → خروجی</span></h2>
+          <p class="hint" style="margin-bottom: 12px">
+            ستون‌های فایل ورودی را به نام‌های نهایی خروجی وصل کنید. ستون هویت
+            برای شناسایی کاربر الزامی است.
+          </p>
+          <div style="margin-bottom: 16px" class="id-col-select">
+            <label>ستون کد هویتی / شناسه کاربر (الزامی)</label>
+            <select id="identityColumn"></select>
+          </div>
+          <div id="mappingList"></div>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" id="btnAddMapping">
+              ＋ افزودن نگاشت
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Auto / Constant fields -->
+      <div class="tab-panel" id="panel-auto">
+        <div class="card">
+          <h2>۴. فیلدهای ثابت (تکرار برای همه سطرها)</h2>
+          <p class="hint" style="margin-bottom: 12px">
+            نام فیلد و مقدار ثابت را وارد کنید. این مقدار برای تمام سطرهای خروجی
+            تکرار می‌شود.
+          </p>
+          <div id="autoList"></div>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" id="btnAddAuto">
+              ＋ افزودن فیلد ثابت
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Column Order (drag & drop) -->
+      <div class="tab-panel" id="panel-order">
+        <div class="card">
+          <h2>
+            ۵. ترتیب ستون‌های خروجی <span class="badge">کشیدن و رها کردن</span>
+          </h2>
+          <p class="hint" style="margin-bottom: 12px">
+            ستون‌ها را با کشیدن جابه‌جا کنید. ترتیب ذخیره می‌شود و دفعه بعد
+            استفاده می‌شود.
+          </p>
+          <div id="orderList"></div>
+          <p class="empty-msg" id="orderEmpty">
+            پس از تعریف نگاشت‌ها و عامل‌ها، ترتیب اینجا ظاهر می‌شود.
+          </p>
+        </div>
+      </div>
+
+      <!-- Generate & Preview -->
+      <div class="card">
+        <h2>۶. تولید خروجی</h2>
+        <div class="actions" style="margin-bottom: 16px">
+          <button class="btn btn-success" id="btnGenerate">
+            🚀 تولید و دانلود اکسل
+          </button>
+          <button class="btn btn-ghost" id="btnPreview">👁 پیش‌نمایش</button>
+          <button class="btn btn-ghost" id="btnSaveConfig">
+            💾 ذخیره تنظیمات
+          </button>
+          <button class="btn btn-danger btn-sm" id="btnResetConfig">
+            بازنشانی تنظیمات
+          </button>
+          <span class="save-indicator" id="saveIndicator">✓ ذخیره شد</span>
+        </div>
+        <div id="previewWrap" style="display: none">
+          <h3
+            style="font-size: 0.95rem; margin-bottom: 8px; color: var(--muted)"
+          >
+            پیش‌نمایش (حداکثر ۲۰ سطر اول)
+          </h3>
+          <div class="preview-table-wrap">
+            <table id="previewTable"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ─── State ───────────────────────────────────────────────
+      const STORAGE_KEY = "excel_agent_transformer_config_v2";
+
+      let inputWorkbook = null;
+      let inputSheet = null;
+      let inputHeaders = [];
+      let inputData = []; // array of objects
+      let agentTitles = []; // string[]  — selected column names from Excel
+      let mappings = []; // { inputCol, outputName }
+      let autoFields = []; // { name, value }
+      let columnOrder = []; // string[] final column names in order
+
+      // ─── DOM refs ────────────────────────────────────────────
+      const $ = (id) => document.getElementById(id);
+      const statusEl = $("status");
+      const fileInput = $("fileInput");
+      const agentCheckList = $("agentCheckList");
+      const agentList = $("agentList");
+      const mappingList = $("mappingList");
+      const autoList = $("autoList");
+      const orderList = $("orderList");
+      const identityColumn = $("identityColumn");
+
+      // ─── Tabs ────────────────────────────────────────────────
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-panel")
+            .forEach((p) => p.classList.remove("active"));
+          tab.classList.add("active");
+          $("panel-" + tab.dataset.tab).classList.add("active");
+          if (tab.dataset.tab === "order") rebuildOrderList();
+        });
+      });
+
+      // ─── Status helper ───────────────────────────────────────
+      function showStatus(msg, type = "info") {
+        statusEl.textContent = msg;
+        statusEl.className = "status show " + type;
+        if (type === "success" || type === "info") {
+          setTimeout(() => statusEl.classList.remove("show"), 5000);
+        }
+      }
+
+      // ─── Load / Save Config ──────────────────────────────────
+      function loadConfig() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const cfg = JSON.parse(raw);
+          agentTitles = cfg.agentTitles || [];
+          mappings = cfg.mappings || [];
+          autoFields = cfg.autoFields || [];
+          columnOrder = cfg.columnOrder || [];
+          if (cfg.identityColumn) {
+            identityColumn.dataset.saved = cfg.identityColumn;
+          }
+          renderAgentChecks();
+          renderSelectedAgents();
+          renderMappings();
+          renderAutos();
+          rebuildOrderList();
+        } catch (e) {
+          console.warn("Could not load config", e);
+        }
+      }
+
+      function saveConfig() {
+        const cfg = {
+          agentTitles,
+          mappings,
+          autoFields,
+          columnOrder,
+          identityColumn:
+            identityColumn.value || identityColumn.dataset.saved || "",
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+        const ind = $("saveIndicator");
+        ind.classList.add("show");
+        setTimeout(() => ind.classList.remove("show"), 2000);
+      }
+
+      $("btnSaveConfig").addEventListener("click", () => {
+        saveConfig();
+        showStatus(
+          "تنظیمات ذخیره شد. دفعه بعد همین تنظیمات بارگذاری می‌شود.",
+          "success",
+        );
+      });
+
+      $("btnResetConfig").addEventListener("click", () => {
+        if (!confirm("همه تنظیمات ذخیره‌شده پاک شود؟")) return;
+        localStorage.removeItem(STORAGE_KEY);
+        agentTitles = [];
+        mappings = [];
+        autoFields = [];
+        columnOrder = [];
+        identityColumn.dataset.saved = "";
+        renderAgentChecks();
+        renderSelectedAgents();
+        renderMappings();
+        renderAutos();
+        rebuildOrderList();
+        showStatus("تنظیمات بازنشانی شد.", "info");
+      });
+
+      // ─── File Upload ─────────────────────────────────────────
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const data = await file.arrayBuffer();
+          // Try UTF-8 first; for CSV without BOM, also try Windows-1256 (common in Iran)
+          let workbook;
+          try {
+            workbook = XLSX.read(data, {
+              type: "array",
+              cellDates: true,
+            });
+          } catch (_) {
+            workbook = XLSX.read(data, { type: "array", cellDates: true });
+          }
+          // If it looks like mojibake on first header, retry with 1256
+          inputWorkbook = workbook;
+          const sheetName = inputWorkbook.SheetNames[0];
+          inputSheet = inputWorkbook.Sheets[sheetName];
+          let json = XLSX.utils.sheet_to_json(inputSheet, {
+            defval: "",
+            raw: true,
+          });
+          if (!json.length) {
+            showStatus("فایل خالی است یا هدر ندارد.", "error");
+            return;
+          }
+          let headers = Object.keys(json[0]);
+          // Heuristic: if headers contain typical mojibake chars, re-read with codepage 1256
+          const looksGarbled = headers.some((h) => /[ے٦ÐÑÒÓÔÕÖ×ØÙÚ]/.test(h));
+          if (
+            looksGarbled &&
+            (file.name.toLowerCase().endsWith(".csv") ||
+              file.name.toLowerCase().endsWith(".xls"))
+          ) {
+            try {
+              inputWorkbook = XLSX.read(data, {
+                type: "array",
+                cellDates: true,
+                codepage: 1256,
+              });
+              inputSheet = inputWorkbook.Sheets[inputWorkbook.SheetNames[0]];
+              json = XLSX.utils.sheet_to_json(inputSheet, {
+                defval: "",
+                raw: true,
+              });
+              headers = Object.keys(json[0] || {});
+            } catch (_) {
+              /* keep previous */
+            }
+          }
+
+          inputHeaders = headers;
+          inputData = json;
+          $("fileName").textContent = file.name;
+          $("rowCount").textContent = `(${inputData.length} سطر داده)`;
+          $("fileInfo").style.display = "block";
+          populateIdentitySelect();
+
+          // Keep only agentTitles that still exist in the new file
+          agentTitles = agentTitles.filter((t) => inputHeaders.includes(t));
+
+          // prefill mappings if empty
+          if (mappings.length === 0) {
+            inputHeaders.forEach((h) => {
+              mappings.push({ inputCol: h, outputName: h });
+            });
+          } else {
+            // update existing mappings to only keep valid ones
+            mappings = mappings.filter((m) =>
+              inputHeaders.includes(m.inputCol),
+            );
+          }
+
+          renderAgentChecks();
+          renderSelectedAgents();
+          renderMappings();
+          rebuildOrderList();
+          showStatus(
+            `فایل «${file.name}» با ${inputData.length} سطر و ${inputHeaders.length} ستون بارگذاری شد.`,
+            "success",
+          );
+        } catch (err) {
+          console.error(err);
+          showStatus("خطا در خواندن فایل: " + err.message, "error");
+        }
+      });
+
+      function populateIdentitySelect() {
+        identityColumn.innerHTML = "";
+        const empty = document.createElement("option");
+        empty.value = "";
+        empty.textContent = "— انتخاب کنید —";
+        identityColumn.appendChild(empty);
+        inputHeaders.forEach((h) => {
+          const opt = document.createElement("option");
+          opt.value = h;
+          opt.textContent = h;
+          identityColumn.appendChild(opt);
+        });
+        // restore saved
+        const saved = identityColumn.dataset.saved;
+        if (saved && inputHeaders.includes(saved)) {
+          identityColumn.value = saved;
+        } else {
+          const common = [
+            "کد ملی",
+            "کد_ملی",
+            "کد هویتی",
+            "شناسه",
+            "identity",
+            "id",
+            "کد",
+            "کدپرسنلی",
+            "کد پرسنلی",
+          ];
+          for (const c of common) {
+            const found = inputHeaders.find(
+              (h) => h.includes(c) || h.toLowerCase() === c.toLowerCase(),
+            );
+            if (found) {
+              identityColumn.value = found;
+              break;
+            }
+          }
+        }
+        identityColumn.addEventListener("change", () => {
+          identityColumn.dataset.saved = identityColumn.value;
+          saveConfig();
+        });
+      }
+
+      // ─── Agent Titles (select from columns) ──────────────────
+      function renderAgentChecks() {
+        agentCheckList.innerHTML = "";
+        const hasHeaders = inputHeaders.length > 0;
+        $("agentEmpty").style.display = hasHeaders ? "none" : "block";
+        $("selectedAgentsSection").style.display = agentTitles.length
+          ? "block"
+          : "none";
+
+        if (!hasHeaders) return;
+
+        inputHeaders.forEach((h) => {
+          const isSelected = agentTitles.includes(h);
+          const label = document.createElement("label");
+          label.className =
+            "agent-check-item" + (isSelected ? " selected" : "");
+          label.innerHTML = `
+          <input type="checkbox" value="${escapeAttr(h)}" ${isSelected ? "checked" : ""} />
+          <span>${escapeHtml(h)}</span>
+        `;
+          const checkbox = label.querySelector("input");
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+              if (!agentTitles.includes(h)) agentTitles.push(h);
+            } else {
+              agentTitles = agentTitles.filter((t) => t !== h);
+            }
+            renderAgentChecks();
+            renderSelectedAgents();
+            rebuildOrderList();
+            saveConfig();
+          });
+          agentCheckList.appendChild(label);
+        });
+      }
+
+      function renderSelectedAgents() {
+        agentList.innerHTML = "";
+        $("selectedAgentsSection").style.display = agentTitles.length
+          ? "block"
+          : "none";
+
+        agentTitles.forEach((title, idx) => {
+          const div = document.createElement("div");
+          div.className = "list-item";
+          div.dataset.name = title;
+          div.innerHTML = `
+          <span class="handle">☰</span>
+          <span style="flex:1;">${escapeHtml(title)}</span>
+          <button class="remove" data-idx="${idx}" title="حذف از انتخاب">✕</button>
+        `;
+          agentList.appendChild(div);
+        });
+
+        agentList.querySelectorAll(".remove").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const i = +e.target.dataset.idx;
+            agentTitles.splice(i, 1);
+            renderAgentChecks();
+            renderSelectedAgents();
+            rebuildOrderList();
+            saveConfig();
+          });
+        });
+
+        if (window.Sortable && agentList.children.length) {
+          new Sortable(agentList, {
+            handle: ".handle",
+            animation: 150,
+            onEnd: () => {
+              agentTitles = Array.from(agentList.children).map(
+                (el) => el.dataset.name,
+              );
+              renderSelectedAgents();
+              rebuildOrderList();
+              saveConfig();
+            },
+          });
+        }
+      }
+
+      // ─── Mappings ────────────────────────────────────────────
+      function renderMappings() {
+        mappingList.innerHTML = "";
+        mappings.forEach((m, idx) => {
+          const div = document.createElement("div");
+          div.className = "mapping-row";
+          const opts = inputHeaders.length
+            ? inputHeaders
+                .map(
+                  (h) =>
+                    `<option value="${escapeAttr(h)}" ${h === m.inputCol ? "selected" : ""}>${escapeHtml(h)}</option>`,
+                )
+                .join("")
+            : `<option value="${escapeAttr(m.inputCol)}">${escapeHtml(m.inputCol || "—")}</option>`;
+          div.innerHTML = `
+          <div>
+            <label>ستون ورودی</label>
+            <select data-idx="${idx}" class="map-input">${opts}</select>
+          </div>
+          <span class="arrow">→</span>
+          <div>
+            <label>نام ستون خروجی</label>
+            <input type="text" value="${escapeAttr(m.outputName)}" data-idx="${idx}" class="map-output" placeholder="نام نهایی" />
+          </div>
+          <button class="btn btn-danger btn-sm remove-map" data-idx="${idx}">حذف</button>
+        `;
+          mappingList.appendChild(div);
+        });
+        mappingList.querySelectorAll(".map-input").forEach((sel) => {
+          sel.addEventListener("change", (e) => {
+            mappings[+e.target.dataset.idx].inputCol = e.target.value;
+            saveConfig();
+          });
+        });
+        mappingList.querySelectorAll(".map-output").forEach((inp) => {
+          inp.addEventListener("change", (e) => {
+            mappings[+e.target.dataset.idx].outputName = e.target.value.trim();
+            rebuildOrderList();
+            saveConfig();
+          });
+        });
+        mappingList.querySelectorAll(".remove-map").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            mappings.splice(+e.target.dataset.idx, 1);
+            renderMappings();
+            rebuildOrderList();
+            saveConfig();
+          });
+        });
+      }
+
+      $("btnAddMapping").addEventListener("click", () => {
+        const first = inputHeaders[0] || "";
+        mappings.push({ inputCol: first, outputName: first || "ستون جدید" });
+        renderMappings();
+        rebuildOrderList();
+        saveConfig();
+      });
+
+      // ─── Auto / Constant fields ──────────────────────────────
+      function renderAutos() {
+        autoList.innerHTML = "";
+        autoFields.forEach((f, idx) => {
+          const div = document.createElement("div");
+          div.className = "auto-field";
+          div.innerHTML = `
+          <div>
+            <label>نام فیلد</label>
+            <input type="text" value="${escapeAttr(f.name)}" data-idx="${idx}" class="auto-name" placeholder="مثلاً: نوع سند" />
+          </div>
+          <div>
+            <label>مقدار ثابت</label>
+            <input type="text" value="${escapeAttr(f.value)}" data-idx="${idx}" class="auto-value" placeholder="مقدار تکرارشونده" />
+          </div>
+          <button class="btn btn-danger btn-sm remove-auto" data-idx="${idx}" style="align-self:end;">حذف</button>
+        `;
+          autoList.appendChild(div);
+        });
+        autoList.querySelectorAll(".auto-name").forEach((inp) => {
+          inp.addEventListener("change", (e) => {
+            autoFields[+e.target.dataset.idx].name = e.target.value.trim();
+            rebuildOrderList();
+            saveConfig();
+          });
+        });
+        autoList.querySelectorAll(".auto-value").forEach((inp) => {
+          inp.addEventListener("change", (e) => {
+            autoFields[+e.target.dataset.idx].value = e.target.value;
+            saveConfig();
+          });
+        });
+        autoList.querySelectorAll(".remove-auto").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            autoFields.splice(+e.target.dataset.idx, 1);
+            renderAutos();
+            rebuildOrderList();
+            saveConfig();
+          });
+        });
+      }
+
+      $("btnAddAuto").addEventListener("click", () => {
+        autoFields.push({ name: "", value: "" });
+        renderAutos();
+        saveConfig();
+      });
+
+      // ─── Column Order (drag & drop) ──────────────────────────
+      function getAllOutputColumns() {
+        const cols = [];
+        const idCol = identityColumn.value;
+        if (idCol) {
+          const map = mappings.find((m) => m.inputCol === idCol);
+          cols.push(map ? map.outputName : idCol);
+        }
+        cols.push("عنوان عامل");
+        cols.push("مقدار ویرایشی");
+        mappings.forEach((m) => {
+          if (m.inputCol === idCol) return;
+          if (m.outputName && !cols.includes(m.outputName))
+            cols.push(m.outputName);
+        });
+        autoFields.forEach((f) => {
+          if (f.name && !cols.includes(f.name)) cols.push(f.name);
+        });
+        return cols;
+      }
+
+      function rebuildOrderList() {
+        const all = getAllOutputColumns();
+        const prev = columnOrder.filter((c) => all.includes(c));
+        const missing = all.filter((c) => !prev.includes(c));
+        columnOrder = [...prev, ...missing];
+        columnOrder = columnOrder.filter((c) => all.includes(c));
+
+        orderList.innerHTML = "";
+        $("orderEmpty").style.display = columnOrder.length ? "none" : "block";
+        columnOrder.forEach((name, idx) => {
+          const div = document.createElement("div");
+          div.className = "list-item";
+          div.dataset.name = name;
+          div.innerHTML = `
+          <span class="handle">☰</span>
+          <span style="flex:1;">${escapeHtml(name)}</span>
+          <span style="color:var(--muted);font-size:0.8rem;">#${idx + 1}</span>
+        `;
+          orderList.appendChild(div);
+        });
+        if (window.Sortable && orderList.children.length) {
+          new Sortable(orderList, {
+            handle: ".handle",
+            animation: 150,
+            onEnd: () => {
+              columnOrder = Array.from(orderList.children).map(
+                (el) => el.dataset.name,
+              );
+              orderList.querySelectorAll(".list-item").forEach((el, i) => {
+                el.querySelector("span:last-child").textContent = "#" + (i + 1);
+              });
+              saveConfig();
+            },
+          });
+        }
+        saveConfig();
+      }
+
+      // ─── Core transformation ─────────────────────────────────
+      function transform() {
+        if (!inputData.length) throw new Error("فایل ورودی بارگذاری نشده است.");
+        if (!agentTitles.length)
+          throw new Error("حداقل یک ستون عامل را انتخاب کنید.");
+        const idCol = identityColumn.value;
+        if (!idCol) throw new Error("ستون کد هویتی را انتخاب کنید.");
+
+        const result = [];
+        for (const row of inputData) {
+          const identity = row[idCol];
+          if (identity === undefined || identity === null || identity === "")
+            continue;
+
+          for (const agent of agentTitles) {
+            const out = {};
+
+            // identity
+            const idMap = mappings.find((m) => m.inputCol === idCol);
+            out[idMap ? idMap.outputName : idCol] = identity;
+
+            // agent title = the selected column name
+            out["عنوان عامل"] = String(agent).replace(/^\s+/, "");
+
+            // value of this agent = value from that column in the current row
+            out["مقدار ویرایشی"] = row[agent] !== undefined ? row[agent] : "";
+
+            // other mapped columns
+            mappings.forEach((m) => {
+              if (m.inputCol === idCol) return;
+              if (!m.outputName) return;
+              // skip if this mapping is one of the agent columns (already handled)
+              if (agentTitles.includes(m.inputCol) && m.inputCol === agent)
+                return;
+              out[m.outputName] =
+                row[m.inputCol] !== undefined ? row[m.inputCol] : "";
+            });
+
+            // auto fields
+            autoFields.forEach((f) => {
+              if (f.name) out[f.name] = f.value;
+            });
+
+            result.push(out);
+          }
+        }
+
+        // Apply column order
+        const ordered = result.map((row) => {
+          const orderedRow = {};
+          columnOrder.forEach((col) => {
+            orderedRow[col] = row[col] !== undefined ? row[col] : "";
+          });
+          Object.keys(row).forEach((k) => {
+            if (!(k in orderedRow)) orderedRow[k] = row[k];
+          });
+          return orderedRow;
+        });
+
+        return ordered;
+      }
+
+      // ─── Preview & Download ──────────────────────────────────
+      function renderPreview(data) {
+        const table = $("previewTable");
+        table.innerHTML = "";
+        if (!data.length) {
+          table.innerHTML = "<tr><td>داده‌ای نیست</td></tr>";
+          return;
+        }
+        const headers = Object.keys(data[0]);
+        const thead = document.createElement("thead");
+        const hr = document.createElement("tr");
+        headers.forEach((h) => {
+          const th = document.createElement("th");
+          th.textContent = h;
+          hr.appendChild(th);
+        });
+        thead.appendChild(hr);
+        table.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        data.slice(0, 20).forEach((row) => {
+          const tr = document.createElement("tr");
+          headers.forEach((h) => {
+            const td = document.createElement("td");
+            td.textContent = row[h] ?? "";
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        $("previewWrap").style.display = "block";
+      }
+
+      $("btnPreview").addEventListener("click", () => {
+        try {
+          const data = transform();
+          renderPreview(data);
+          showStatus(`پیش‌نمایش آماده: ${data.length} سطر خروجی.`, "info");
+        } catch (err) {
+          showStatus(err.message, "error");
+        }
+      });
+
+      $("btnGenerate").addEventListener("click", () => {
+        try {
+          const data = transform();
+          if (!data.length) {
+            showStatus(
+              "هیچ سطری تولید نشد. داده‌ها و تنظیمات را بررسی کنید.",
+              "error",
+            );
+            return;
+          }
+          const ws = XLSX.utils.json_to_sheet(data, {
+            header: columnOrder.length ? columnOrder : undefined,
+          });
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "خروجی");
+          const fname =
+            "خروجی_عاملها_" + new Date().toISOString().slice(0, 10) + ".xlsx";
+          XLSX.writeFile(wb, fname);
+          renderPreview(data);
+          showStatus(
+            `فایل «${fname}» با ${data.length} سطر دانلود شد.`,
+            "success",
+          );
+          saveConfig();
+        } catch (err) {
+          showStatus(err.message, "error");
+        }
+      });
+
+      // ─── Helpers ─────────────────────────────────────────────
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function escapeAttr(s) {
+        return escapeHtml(s).replace(/'/g, "&#39;");
+      }
+
+      // ─── Init ────────────────────────────────────────────────
+      loadConfig();
+      renderAgentChecks();
+      renderSelectedAgents();
+      renderMappings();
+      renderAutos();
+      rebuildOrderList();
+    </script>
+  </body>
+</html>
